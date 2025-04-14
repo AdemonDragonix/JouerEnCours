@@ -102,28 +102,16 @@
   </div>
 
   <script>
-
-
-function connexion() {
-        let pseudo = prompt("Entrez votre pseudo :");
-        let code = prompt("Entrez le code :");
-
-        if (pseudo && code === "votreCodeSecret") {
-          // Stocker l'utilisateur dans localStorage
-          const utilisateur = { pseudo };
-          localStorage.setItem("utilisateurConnecte", JSON.stringify(utilisateur));
-          window.location.href = "dino.html";  // Redirige vers le jeu
-        } else {
-          alert("Code incorrect ou pseudo manquant.");
-        }
+    // Vérification si l'utilisateur est déjà connecté
+    function checkConnexion() {
+      const utilisateur = JSON.parse(localStorage.getItem("utilisateurConnecte"));
+      if (utilisateur) {
+        // Rediriger vers index.html si déjà connecté
+        window.location.href = "index.html";
       }
+    }
 
-      // Vérifier si l'utilisateur est déjà connecté
-      if (localStorage.getItem("utilisateurConnecte")) {
-        window.location.href = "dino.html";  // Si déjà connecté, rediriger vers le jeu
-      }
-
-
+    // Fonction pour changer d'onglet (connexion / création de compte)
     function switchTab(tabName) {
       document.querySelectorAll('.form-section').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
@@ -132,14 +120,17 @@ function connexion() {
       event.target.classList.add('active');
     }
 
+    // Fonction pour obtenir les utilisateurs enregistrés
     function getUsers() {
       return JSON.parse(localStorage.getItem("users")) || [];
     }
 
+    // Fonction pour sauvegarder les utilisateurs
     function saveUsers(users) {
       localStorage.setItem("users", JSON.stringify(users));
     }
 
+    // Connexion de l'utilisateur
     function login() {
       const pseudo = document.getElementById("loginPseudo").value.trim();
       const code = document.getElementById("loginCode").value.trim();
@@ -148,12 +139,14 @@ function connexion() {
 
       if (found) {
         localStorage.setItem("pseudoConnecte", pseudo);
-        window.location.reload();
+        // Rediriger vers index.html après la connexion réussie
+        window.location.href = "index.html";
       } else {
         document.getElementById("loginError").textContent = "Pseudo ou code incorrect.";
       }
     }
 
+    // Création d'un nouveau compte
     function register() {
       const pseudo = document.getElementById("registerPseudo").value.trim();
       const code = document.getElementById("registerCode").value.trim();
@@ -173,14 +166,17 @@ function connexion() {
       users.push({ pseudo, code });
       saveUsers(users);
       localStorage.setItem("pseudoConnecte", pseudo);
-      window.location.reload();
+      // Rediriger vers index.html après la création du compte
+      window.location.href = "index.html";
     }
 
+    // Fonction pour se déconnecter
     function deconnexion() {
       localStorage.removeItem("pseudoConnecte");
-      window.location.reload();
+      window.location.href = "connexion.html";  // Redirige vers la page de connexion
     }
 
+    // Fonction pour supprimer le compte
     function supprimerCompte() {
       const pseudo = localStorage.getItem("pseudoConnecte");
       if (!pseudo) return;
@@ -188,32 +184,18 @@ function connexion() {
       const confirmSuppression = confirm("Es-tu sûr de vouloir supprimer ton compte ?");
       if (!confirmSuppression) return;
 
-      // Supprimer du tableau des utilisateurs
       let users = getUsers();
       users = users.filter(u => u.pseudo !== pseudo);
       saveUsers(users);
 
-      // Supprimer du classement (scoresDino)
-      let scores = JSON.parse(localStorage.getItem("scoresDino")) || [];
-      scores = scores.filter(s => s.pseudo !== pseudo);
-      localStorage.setItem("scoresDino", JSON.stringify(scores));
-
       localStorage.removeItem("pseudoConnecte");
       alert("Compte supprimé.");
-      window.location.reload();
+      window.location.href = "connexion.html";  // Redirige vers la page de connexion
     }
 
+    // Lors du chargement de la page, vérifier si l'utilisateur est déjà connecté
     window.onload = function () {
-      const pseudo = localStorage.getItem("pseudoConnecte");
-
-      if (pseudo) {
-        document.getElementById("container").innerHTML = `
-          <h2>Connecté en tant que <strong>${pseudo}</strong></h2>
-          <button onclick="deconnexion()">🔓 Se déconnecter</button><br><br>
-          <button onclick="supprimerCompte()">🗑 Supprimer mon compte</button><br><br>
-          <button onclick="window.location.href='index.html'">🏁 Aller au jeu</button>
-        `;
-      }
+      checkConnexion();  // Vérifier si l'utilisateur est déjà connecté
     }
   </script>
 </body>

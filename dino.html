@@ -125,17 +125,23 @@
     ⚙️ Admin
   </button>
 
+ 
+
   <div id="container">
 
     <h2>Jeu du Dino</h2>
 
     <div id="pseudoForm">
-      <input type="text" id="pseudo" placeholder="Entre ton pseudo" />
+      <!-- Le champ de pseudo devient un champ en lecture seule -->
+      <input type="text" id="pseudo" placeholder="Entre ton pseudo" disabled />
       <br>
       <button onclick="demarrerJeu()">Commencer</button>
     </div>
 
     <div id="gameArea" style="display: none;">
+      <div id="pseudoContainer">
+        <span>Bienvenue, <strong id="pseudoDisplay">Chargement...</strong></span>
+      </div>
       <p><strong>Joueur :</strong> <span id="affichagePseudo"></span></p>
       <div id="score">Score : 0</div>
       <canvas id="game" width="800" height="200"></canvas>
@@ -156,7 +162,6 @@
   </div>
 
   <script>
-    let pseudo = "";
     let scores = [];
     let lastObstacleX = 0;
 
@@ -169,6 +174,17 @@
 
     function playCrashSound() {
       crashSound.play();
+    }
+
+    // Récupérer le pseudo de l'utilisateur connecté depuis localStorage
+    const pseudo = localStorage.getItem("pseudoConnecte");
+
+    // Vérifier si le pseudo existe et l'afficher
+    if (pseudo) {
+      document.getElementById("pseudoDisplay").textContent = pseudo;
+      document.getElementById("pseudo").value = pseudo;  // Remplir le champ avec le pseudo
+    } else {
+      document.getElementById("pseudoDisplay").textContent = "Inconnu";
     }
 
     // ✅ Mise à jour ici : clé renommée en 'dinoScores'
@@ -223,8 +239,7 @@
     }
 
     function demarrerJeu() {
-      pseudo = document.getElementById("pseudo").value.trim();
-      if (pseudo === "") {
+      if (!pseudo) {
         alert("Merci d'entrer un pseudo !");
         return;
       }
@@ -362,5 +377,6 @@
 
     chargerScores();
   </script>
+
 </body>
 </html>
