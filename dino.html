@@ -124,7 +124,7 @@
       <button id="rejouerBtn" onclick="location.reload()">🔁 Rejouer</button>
     </div>
 
-    <h3 style="margin-top: 40px;">🏆 Classement général</h3>
+    <h3 style="margin-top: 40px;">🏆 Top 5 des scores</h3>
     <table id="scoreboard">
       <thead>
         <tr>
@@ -164,35 +164,31 @@
     function afficherScores() {
       const tbody = document.querySelector("#scoreboard tbody");
       tbody.innerHTML = "";
-      scores.forEach((s, i) => {
+      const top5 = scores.slice(0, 5);
+      top5.forEach((s, i) => {
         const row = document.createElement("tr");
         row.innerHTML = `<td>${i + 1}ᵉ</td><td>${s.pseudo}</td><td>${s.score}</td>`;
         tbody.appendChild(row);
       });
     }
 
-    function chargerScores() {
-      fetch('get_scores.php')
-        .then(response => response.json())
-        .then(data => {
-          scores = data.sort((a, b) => b.score - a.score);
-          afficherScores();
-        })
-        .catch(error => console.error("Erreur chargement scores :", error));
-    }
-
     function ajouterScore(pseudo, score) {
       fetch('save_score.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pseudo: pseudo, score: score })
+        body: JSON.stringify({ pseudo, score })
       })
-      .then(response => response.text())
-      .then(result => {
-        console.log(result);
-        chargerScores();
-      })
-      .catch(error => console.error("Erreur sauvegarde score :", error));
+      .then(res => res.json())
+      .then(() => chargerScoresEnLigne());
+    }
+
+    function chargerScoresEnLigne() {
+      fetch('get_scores.php')
+        .then(res => res.json())
+        .then(data => {
+          scores = data.sort((a, b) => b.score - a.score);
+          afficherScores();
+        });
     }
 
     function demarrerJeu() {
@@ -263,9 +259,9 @@
       }
 
       const distanceSinceLast = canvas.width - lastObstacleX;
-      const cactusGenerationChance = score < 500 ? 0.04 : 0.02;
+      const cactusChance = score < 500 ? 0.04 : 0.02;
 
-      if (Math.random() < cactusGenerationChance && (obstacles.length === 0 || distanceSinceLast > 200)) {
+      if (Math.random() < cactusChance && (obstacles.length === 0 || distanceSinceLast > 200)) {
         const obstacle = { x: canvas.width, y: sol + dino.height - 40, width: 20, height: 40 };
         obstacles.push(obstacle);
         lastObstacleX = canvas.width;
@@ -276,14 +272,14 @@
         birds.push(bird);
       }
 
-      for (let i = 0; i < obstacles.length; i++) {
-        obstacles[i].x -= 6;
+      for (let obs of obstacles) {
+        obs.x -= 6;
 
         if (
-          dino.x < obstacles[i].x + obstacles[i].width &&
-          dino.x + dino.width > obstacles[i].x &&
-          dino.y < obstacles[i].y + obstacles[i].height &&
-          dino.y + dino.height > obstacles[i].y
+          dino.x < obs.x + obs.width &&
+          dino.x + dino.width > obs.x &&
+          dino.y < obs.y + obs.height &&
+          dino.y + dino.height > obs.y
         ) {
           gameOver = true;
           playCrashSound();
@@ -294,14 +290,14 @@
         }
       }
 
-      for (let i = 0; i < birds.length; i++) {
-        birds[i].x -= 6;
+      for (let bird of birds) {
+        bird.x -= 6;
 
         if (
-          dino.x < birds[i].x + birds[i].width &&
-          dino.x + dino.width > birds[i].x &&
-          dino.y < birds[i].y + birds[i].height &&
-          dino.y + dino.height > birds[i].y
+          dino.x < bird.x + bird.width &&
+          dino.x + dino.width > bird.x &&
+          dino.y < bird.y + bird.height &&
+          dino.y + dino.height > bird.y
         ) {
           gameOver = true;
           playCrashSound();
@@ -332,10 +328,8 @@
       }
     });
 
-    chargerScores(); // Charger les scores dès le chargement
+    chargerScoresEnLigne();
   </script>
 
 </body>
-
 </html>
-
