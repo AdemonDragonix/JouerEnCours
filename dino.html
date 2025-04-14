@@ -1,119 +1,99 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Jeu du Dino</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: 'Arial', sans-serif;
+      text-align: center;
+      background: #f4f4f4;
       margin: 0;
-      background: linear-gradient(to right, #f6d365, #fda085);
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      min-height: 100vh;
-      padding: 20px;
+      padding: 0;
     }
 
     #container {
+      max-width: 800px;
+      margin: 40px auto;
       background: white;
-      padding: 30px;
-      border-radius: 15px;
-      width: 850px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-      text-align: center;
-      position: relative;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
     }
 
-    input, button {
-      padding: 10px;
-      font-size: 16px;
-      margin: 5px;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-    }
-
-    button {
-      background-color: #ff7e5f;
-      color: white;
-      cursor: pointer;
-      border: none;
-    }
-
-    canvas {
-      display: block;
-      margin: 20px auto;
-      background-color: #fff;
-      border: 2px solid #000;
+    h2 {
+      margin-bottom: 10px;
     }
 
     #score {
       font-size: 24px;
-      margin-top: 10px;
+      margin: 10px 0;
     }
 
-    #connexionBtn {
-        position: absolute;
-        top: 10px;
-        left: 1283px;
-        font-size: 16px;
-        padding: 8px 12px;
-        background-color: #ff7e5f;
-        color: white;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-    }
-
-    #retour {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      font-size: 16px;
-      padding: 8px 12px;
-      background-color: #ff7e5f;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
+    canvas {
+      border: 2px solid #ccc;
+      background: #fff;
     }
 
     #rejouerBtn {
       display: none;
       margin-top: 15px;
-    }
-
-    #resetBtn {
-      position: absolute;
-      top: 10px;
-      right: 10px; 
-      background-color: #d62828;
-      padding: 10px 15px;
+      padding: 8px 16px;
+      font-size: 16px;
+      background-color: #28a745;
       color: white;
       border: none;
       border-radius: 5px;
       cursor: pointer;
-      z-index: 10;
     }
 
     table {
-      margin: 30px auto 0;
+      width: 100%;
       border-collapse: collapse;
-      width: 90%;
+      margin-top: 20px;
     }
 
     th, td {
-      border: 1px solid #ccc;
-      padding: 8px 12px;
+      border: 1px solid #ddd;
+      padding: 8px;
     }
 
     th {
-      background-color: #f7a072;
-      color: white;
+      background-color: #f0f0f0;
     }
 
-    tbody tr:nth-child(even) {
-      background-color: #ffe0c9;
+    #pseudoForm {
+      margin-bottom: 20px;
+    }
+
+    #pseudoForm input {
+      padding: 10px;
+      width: 200px;
+      font-size: 16px;
+    }
+
+    #pseudoForm button {
+      padding: 10px 15px;
+      font-size: 16px;
+    }
+
+    #retour, #connexionBtn {
+      position: absolute;
+      top: 10px;
+      padding: 10px 15px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    #retour {
+      left: 10px;
+    }
+
+    #connexionBtn {
+      right: 10px;
     }
   </style>
 </head>
@@ -125,14 +105,10 @@
     ⚙️ Admin
   </button>
 
- 
-
   <div id="container">
-
     <h2>Jeu du Dino</h2>
 
     <div id="pseudoForm">
-      <!-- Le champ de pseudo devient un champ en lecture seule -->
       <input type="text" id="pseudo" placeholder="Entre ton pseudo" disabled />
       <br>
       <button onclick="demarrerJeu()">Commencer</button>
@@ -176,28 +152,13 @@
       crashSound.play();
     }
 
-    // Récupérer le pseudo de l'utilisateur connecté depuis localStorage
     const pseudo = localStorage.getItem("pseudoConnecte");
 
-    // Vérifier si le pseudo existe et l'afficher
     if (pseudo) {
       document.getElementById("pseudoDisplay").textContent = pseudo;
-      document.getElementById("pseudo").value = pseudo;  // Remplir le champ avec le pseudo
+      document.getElementById("pseudo").value = pseudo;
     } else {
       document.getElementById("pseudoDisplay").textContent = "Inconnu";
-    }
-
-    // ✅ Mise à jour ici : clé renommée en 'dinoScores'
-    function sauvegarderScores() {
-      localStorage.setItem('dinoScores', JSON.stringify(scores));
-    }
-
-    function chargerScores() {
-      const data = localStorage.getItem('dinoScores');
-      if (data) {
-        scores = JSON.parse(data);
-        afficherScores();
-      }
     }
 
     function afficherScores() {
@@ -212,30 +173,22 @@
     }
 
     function ajouterScore(pseudo, score) {
-      const existing = scores.find(s => s.pseudo === pseudo);
-      if (existing) {
-        if (score > existing.score) {
-          existing.score = score;
-        }
-      } else {
-        scores.push({ pseudo, score });
-      }
-
-      scores.sort((a, b) => b.score - a.score);
-      sauvegarderScores();
-      afficherScores();
+      fetch('save_score.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pseudo, score })
+      })
+      .then(res => res.json())
+      .then(() => chargerScoresEnLigne());
     }
 
-    function resetClassement() {
-      const code = prompt("Entrez le code pour réinitialiser le classement :");
-      if (code === "25032012") {
-        localStorage.removeItem('dinoScores'); // ✅ aussi modifié ici
-        scores = [];
-        afficherScores();
-        alert("Classement réinitialisé !");
-      } else {
-        alert("Code incorrect !");
-      }
+    function chargerScoresEnLigne() {
+      fetch('get_scores.php')
+        .then(res => res.json())
+        .then(data => {
+          scores = data.sort((a, b) => b.score - a.score);
+          afficherScores();
+        });
     }
 
     function demarrerJeu() {
@@ -276,14 +229,14 @@
     }
 
     function drawObstacles() {
-      ctx.fillStyle = "green"; 
+      ctx.fillStyle = "green";
       for (let obs of obstacles) {
         ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
       }
     }
 
     function drawBirds() {
-      ctx.fillStyle = "gray"; 
+      ctx.fillStyle = "gray";
       for (let bird of birds) {
         ctx.fillRect(bird.x, bird.y, bird.width, bird.height);
       }
@@ -306,9 +259,9 @@
       }
 
       const distanceSinceLast = canvas.width - lastObstacleX;
-      const cactusGenerationChance = score < 500 ? 0.04 : 0.02;
+      const cactusChance = score < 500 ? 0.04 : 0.02;
 
-      if (Math.random() < cactusGenerationChance && (obstacles.length === 0 || distanceSinceLast > 200)) {
+      if (Math.random() < cactusChance && (obstacles.length === 0 || distanceSinceLast > 200)) {
         const obstacle = { x: canvas.width, y: sol + dino.height - 40, width: 20, height: 40 };
         obstacles.push(obstacle);
         lastObstacleX = canvas.width;
@@ -319,14 +272,14 @@
         birds.push(bird);
       }
 
-      for (let i = 0; i < obstacles.length; i++) {
-        obstacles[i].x -= 6;
+      for (let obs of obstacles) {
+        obs.x -= 6;
 
         if (
-          dino.x < obstacles[i].x + obstacles[i].width &&
-          dino.x + dino.width > obstacles[i].x &&
-          dino.y < obstacles[i].y + obstacles[i].height &&
-          dino.y + dino.height > obstacles[i].y
+          dino.x < obs.x + obs.width &&
+          dino.x + dino.width > obs.x &&
+          dino.y < obs.y + obs.height &&
+          dino.y + dino.height > obs.y
         ) {
           gameOver = true;
           playCrashSound();
@@ -337,14 +290,14 @@
         }
       }
 
-      for (let i = 0; i < birds.length; i++) {
-        birds[i].x -= 6;
+      for (let bird of birds) {
+        bird.x -= 6;
 
         if (
-          dino.x < birds[i].x + birds[i].width &&
-          dino.x + dino.width > birds[i].x &&
-          dino.y < birds[i].y + birds[i].height &&
-          dino.y + dino.height > birds[i].y
+          dino.x < bird.x + bird.width &&
+          dino.x + dino.width > bird.x &&
+          dino.y < bird.y + bird.height &&
+          dino.y + dino.height > bird.y
         ) {
           gameOver = true;
           playCrashSound();
@@ -375,8 +328,9 @@
       }
     });
 
-    chargerScores();
+    chargerScoresEnLigne();
   </script>
 
 </body>
 </html>
+
