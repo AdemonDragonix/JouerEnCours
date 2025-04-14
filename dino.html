@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Jeu du Dino</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: linear-gradient(to right, #f6d365, #fda085);
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    #container {
+      background: white;
+      padding: 30px;
+      border-radius: 15px;
+      width: 850px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      text-align: center;
+      position: relative;
+    }
+
+    input, button {
+      padding: 10px;
+      font-size: 16px;
+      margin: 5px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      background-color: #ff7e5f;
+      color: white;
+      cursor: pointer;
+      border: none;
+    }
+
+    canvas {
+      display: block;
+      margin: 20px auto;
+      background-color: #fff;
+      border: 2px solid #000;
+    }
+
+    #score {
+      font-size: 24px;
+      margin-top: 10px;
+    }
+
+    #connexionBtn {
+        position: absolute;
+        top: 10px;
+        left: 1283px;
+        font-size: 16px;
+        padding: 8px 12px;
+        background-color: #ff7e5f;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    #retour {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      font-size: 16px;
+      padding: 8px 12px;
+      background-color: #ff7e5f;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    #rejouerBtn {
+      display: none;
+      margin-top: 15px;
+    }
+
+    #resetBtn {
+      position: absolute;
+      top: 10px;
+      right: 10px; 
+      background-color: #d62828;
+      padding: 10px 15px;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      z-index: 10;
+    }
+
+    table {
+      margin: 30px auto 0;
+      border-collapse: collapse;
+      width: 90%;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px 12px;
+    }
+
+    th {
+      background-color: #f7a072;
+      color: white;
+    }
+
+    tbody tr:nth-child(even) {
+      background-color: #ffe0c9;
+    }
+  </style>
+</head>
+<body>
+
+  <button id="retour" onclick="window.location.href='accueil.html'">⬅ Retour</button>
+  <button id="connexionBtn" onclick="window.location.href='connexion.html'">🔐 Connexion</button>
+  <button onclick="window.location.href='admin.html'" style="position: absolute; top: 60px; right: 10px; background-color: red; color: white; padding: 8px 12px; border: none; border-radius: 5px; cursor: pointer;">
+    ⚙️ Admin
+  </button>
+
+  <div id="container">
+
+    <h2>Jeu du Dino</h2>
+
+    <div id="pseudoForm">
+      <input type="text" id="pseudo" placeholder="Entre ton pseudo" />
+      <br>
+      <button onclick="demarrerJeu()">Commencer</button>
+    </div>
+
+    <div id="gameArea" style="display: none;">
+      <p><strong>Joueur :</strong> <span id="affichagePseudo"></span></p>
+      <div id="score">Score : 0</div>
+      <canvas id="game" width="800" height="200"></canvas>
+      <button id="rejouerBtn" onclick="location.reload()">🔁 Rejouer</button>
+    </div>
+
+    <h3 style="margin-top: 40px;">🏆 Top 5 des scores</h3>
+    <table id="scoreboard">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Pseudo</th>
+          <th>Score</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <script>
+    let pseudo = "";
+    let scores = [];
+    let lastObstacleX = 0;
+
+    const jumpSound = new Audio('https://www.soundjay.com/button/beep-07.wav');
+    const crashSound = new Audio('https://www.soundjay.com/button/beep-05.wav');
+
+    function playJumpSound() {
+      jumpSound.play();
+    }
+
+    function playCrashSound() {
+      crashSound.play();
+    }
+
+    // ✅ Mise à jour ici : clé renommée en 'dinoScores'
+    function sauvegarderScores() {
+      localStorage.setItem('dinoScores', JSON.stringify(scores));
+    }
+
+    function chargerScores() {
+      const data = localStorage.getItem('dinoScores');
+      if (data) {
+        scores = JSON.parse(data);
+        afficherScores();
+      }
+    }
+
+    function afficherScores() {
+      const tbody = document.querySelector("#scoreboard tbody");
+      tbody.innerHTML = "";
+      const top5 = scores.slice(0, 5);
+      top5.forEach((s, i) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `<td>${i + 1}ᵉ</td><td>${s.pseudo}</td><td>${s.score}</td>`;
+        tbody.appendChild(row);
+      });
+    }
+
+    function ajouterScore(pseudo, score) {
+      const existing = scores.find(s => s.pseudo === pseudo);
+      if (existing) {
+        if (score > existing.score) {
+          existing.score = score;
+        }
+      } else {
+        scores.push({ pseudo, score });
+      }
+
+      scores.sort((a, b) => b.score - a.score);
+      sauvegarderScores();
+      afficherScores();
+    }
+
+    function resetClassement() {
+      const code = prompt("Entrez le code pour réinitialiser le classement :");
+      if (code === "25032012") {
+        localStorage.removeItem('dinoScores'); // ✅ aussi modifié ici
+        scores = [];
+        afficherScores();
+        alert("Classement réinitialisé !");
+      } else {
+        alert("Code incorrect !");
+      }
+    }
+
+    function demarrerJeu() {
+      pseudo = document.getElementById("pseudo").value.trim();
+      if (pseudo === "") {
+        alert("Merci d'entrer un pseudo !");
+        return;
+      }
+
+      document.getElementById("pseudoForm").style.display = "none";
+      document.getElementById("gameArea").style.display = "block";
+      document.getElementById("affichagePseudo").textContent = pseudo;
+
+      update();
+    }
+
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+
+    const sol = 170;
+    let dino = { x: 50, y: sol, width: 30, height: 30, vy: 0, jumping: false };
+    let gravity = 1.5;
+    let obstacles = [];
+    let birds = [];
+    let score = 0;
+    let gameOver = false;
+
+    function drawSol() {
+      ctx.strokeStyle = "#000";
+      ctx.beginPath();
+      ctx.moveTo(0, sol + dino.height);
+      ctx.lineTo(canvas.width, sol + dino.height);
+      ctx.stroke();
+    }
+
+    function drawDino() {
+      ctx.fillStyle = "#333";
+      ctx.fillRect(dino.x, dino.y, dino.width, dino.height);
+    }
+
+    function drawObstacles() {
+      ctx.fillStyle = "green"; 
+      for (let obs of obstacles) {
+        ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
+      }
+    }
+
+    function drawBirds() {
+      ctx.fillStyle = "gray"; 
+      for (let bird of birds) {
+        ctx.fillRect(bird.x, bird.y, bird.width, bird.height);
+      }
+    }
+
+    function update() {
+      if (gameOver) return;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      drawSol();
+      drawDino();
+
+      dino.y += dino.vy;
+      dino.vy += gravity;
+
+      if (dino.y >= sol) {
+        dino.y = sol;
+        dino.jumping = false;
+      }
+
+      const distanceSinceLast = canvas.width - lastObstacleX;
+      const cactusGenerationChance = score < 500 ? 0.04 : 0.02;
+
+      if (Math.random() < cactusGenerationChance && (obstacles.length === 0 || distanceSinceLast > 200)) {
+        const obstacle = { x: canvas.width, y: sol + dino.height - 40, width: 20, height: 40 };
+        obstacles.push(obstacle);
+        lastObstacleX = canvas.width;
+      }
+
+      if (score >= 500 && Math.random() < 0.01) {
+        const bird = { x: canvas.width, y: Math.random() * 100 + 50, width: 20, height: 20 };
+        birds.push(bird);
+      }
+
+      for (let i = 0; i < obstacles.length; i++) {
+        obstacles[i].x -= 6;
+
+        if (
+          dino.x < obstacles[i].x + obstacles[i].width &&
+          dino.x + dino.width > obstacles[i].x &&
+          dino.y < obstacles[i].y + obstacles[i].height &&
+          dino.y + dino.height > obstacles[i].y
+        ) {
+          gameOver = true;
+          playCrashSound();
+          document.getElementById("score").innerText = "💀 Game Over - Score : " + score;
+          document.getElementById("rejouerBtn").style.display = "block";
+          ajouterScore(pseudo, score);
+          return;
+        }
+      }
+
+      for (let i = 0; i < birds.length; i++) {
+        birds[i].x -= 6;
+
+        if (
+          dino.x < birds[i].x + birds[i].width &&
+          dino.x + dino.width > birds[i].x &&
+          dino.y < birds[i].y + birds[i].height &&
+          dino.y + dino.height > birds[i].y
+        ) {
+          gameOver = true;
+          playCrashSound();
+          document.getElementById("score").innerText = "💀 Game Over - Score : " + score;
+          document.getElementById("rejouerBtn").style.display = "block";
+          ajouterScore(pseudo, score);
+          return;
+        }
+      }
+
+      obstacles = obstacles.filter(obs => obs.x + obs.width > 0);
+      birds = birds.filter(bird => bird.x + bird.width > 0);
+
+      drawObstacles();
+      drawBirds();
+
+      score++;
+      document.getElementById("score").innerText = "Score : " + score;
+
+      requestAnimationFrame(update);
+    }
+
+    document.addEventListener('keydown', function (e) {
+      if ((e.code === 'Space' || e.key === 'ArrowUp') && !dino.jumping && !gameOver) {
+        dino.vy = -20;
+        dino.jumping = true;
+        playJumpSound();
+      }
+    });
+
+    chargerScores();
+  </script>
+</body>
+</html>

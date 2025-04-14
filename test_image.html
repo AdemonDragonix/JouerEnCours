@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Test d'affichage</title>
+  <style>
+    body {
+      background: linear-gradient(to right, #f6d365, #fda085);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    canvas {
+      border: 2px solid black;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="test" width="200" height="100"></canvas>
+
+  <script>
+    const canvas = document.getElementById('test');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    img.src = 'dino.png';
+
+    img.onload = () => {
+      ctx.drawImage(img, 0, 0, 60, 60, 10, 20, 60, 60); // Dino
+      ctx.drawImage(img, 60, 0, 60, 60, 100, 20, 60, 60); // Cactus
+    };
+  </script>
+</body>
+</html>

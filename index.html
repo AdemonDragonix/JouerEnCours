@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Jeu de Devinette</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to right, #f6d365, #fda085);
+      text-align: center;
+      padding-top: 50px;
+    }
+
+    #container {
+      background: white;
+      padding: 30px;
+      border-radius: 15px;
+      margin: auto;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      width: 850px;
+      text-align: center;
+      position: relative;
+    }
+
+    input, button {
+      padding: 10px;
+      font-size: 16px;
+      margin: 5px 0;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      background-color: #ff7e5f;
+      color: white;
+      cursor: pointer;
+      border: none;
+    }
+
+    #Dinocrhome {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      font-size: 16px;
+      padding: 8px 12px;
+      background-color: #ff7e5f;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    #connexionBtn {
+      position: absolute;
+      top: 10px;
+      left: 1300px;
+      font-size: 16px;
+      padding: 8px 12px;
+      background-color: #ff7e5f;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    #message {
+      margin-top: 15px;
+      font-size: 18px;
+      min-height: 20px;
+    }
+
+    #timer {
+      font-weight: bold;
+      color: #333;
+    }
+
+    table {
+      margin: 20px auto;
+      border-collapse: collapse;
+      width: 90%;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+    }
+
+    th {
+      background-color: #fda085;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+
+  <button id="Dinocrhome" onclick="window.location.href='accueil.html'">⬅ Retour</button>
+  <button id="connexionBtn" onclick="window.location.href='connexion.html'">🔐 Connexion</button>
+  <button onclick="window.location.href='admin.html'" style="position: absolute; top: 60px; right: 18px; background-color: red; color: white; padding: 8px 12px; border: none; border-radius: 5px; cursor: pointer;">
+    ⚙️ Admin
+  </button>
+  
+
+  <div id="container">
+    <h2>Jeu de Devinette (1 à 10)</h2>
+
+    <div id="pseudoForm">
+      <input type="text" id="pseudo" placeholder="Entre ton pseudo" />
+      <br>
+      <button onclick="demarrerJeu()">Commencer</button>
+    </div>
+
+    <div id="gameArea" style="display: none;">
+      <p><strong>Joueur :</strong> <span id="affichagePseudo"></span></p>
+      <p><strong>Temps :</strong> <span id="timer">0</span> secondes</p>
+      <input type="number" id="inputNumber" placeholder="Entrez un nombre" />
+      <br>
+      <button onclick="deviner()">Valider</button>
+      <div id="message"></div>
+    </div>
+
+    <h3>🏆 Tableau des scores</h3>
+    <table id="scoreboard">
+      <thead>
+        <tr>
+          <th>Pseudo</th>
+          <th>Essais</th>
+          <th>Temps (s)</th>
+          <th>Moyenne</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+<script>
+  let scores = [];
+  let nombreSecret = 0;
+  let essais = 0;
+  let pseudo = "";
+  let startTime;
+  let timerInterval;
+
+  window.onload = function () {
+    const utilisateur = JSON.parse(localStorage.getItem("utilisateurConnecte"));
+    if (utilisateur) {
+      document.getElementById("connexionBtn").style.display = "none";
+    }
+
+    const savedPseudo = localStorage.getItem("pseudoConnecte");
+    if (savedPseudo) {
+      document.getElementById("pseudo").value = savedPseudo;
+    }
+
+    chargerScores();
+  };
+
+  function chargerScores() {
+    const data = localStorage.getItem("scores");
+    if (data) {
+      scores = JSON.parse(data);
+      afficherScores();
+    }
+  }
+
+  function afficherScores() {
+    const tbody = document.querySelector("#scoreboard tbody");
+    tbody.innerHTML = "";
+
+    for (const score of scores) {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${score.pseudo}</td>
+        <td>${score.essais}</td>
+        <td>${score.temps}</td>
+        <td>${score.moyenne.toFixed(2)}</td>
+      `;
+      tbody.appendChild(row);
+    }
+  }
+
+  function ajouterScore(pseudo, essais, temps) {
+    const moyenne = ((temps / 20) + (essais / 10)) / 2;
+
+    // Supprime l'ancien score de ce pseudo s'il existe
+    scores = scores.filter(score => score.pseudo !== pseudo);
+
+    scores.push({ pseudo, essais, temps, moyenne });
+
+    // Trie les scores par meilleure moyenne et garde top 5
+    scores.sort((a, b) => a.moyenne - b.moyenne);
+    scores = scores.slice(0, 5);
+
+    localStorage.setItem("scores", JSON.stringify(scores));
+    afficherScores();
+  }
+
+  function demarrerJeu() {
+    pseudo = document.getElementById("pseudo").value.trim();
+    if (pseudo === "") {
+      alert("Merci d'entrer un pseudo !");
+      return;
+    }
+
+    document.getElementById("pseudoForm").style.display = "none";
+    document.getElementById("gameArea").style.display = "block";
+    document.getElementById("affichagePseudo").textContent = pseudo;
+
+    nombreSecret = Math.floor(Math.random() * 10) + 1;
+    essais = 0;
+    startTime = Date.now();
+    timerInterval = setInterval(majTimer, 1000);
+
+    document.getElementById("inputNumber").focus();
+  }
+
+  function majTimer() {
+    const now = Date.now();
+    const seconds = Math.floor((now - startTime) / 1000);
+    document.getElementById("timer").textContent = seconds;
+  }
+
+  function deviner() {
+    const input = document.getElementById("inputNumber");
+    const valeur = parseInt(input.value);
+    const message = document.getElementById("message");
+    essais++;
+
+    if (isNaN(valeur)) {
+      message.textContent = "Entre un nombre valide.";
+      input.value = "";
+      return;
+    }
+
+    if (valeur > nombreSecret) {
+      message.textContent = "Le nombre est plus petit.";
+      input.value = "";
+    } else if (valeur < nombreSecret) {
+      message.textContent = "Le nombre est plus grand.";
+      input.value = "";
+    } else {
+      clearInterval(timerInterval);
+      const temps = Math.floor((Date.now() - startTime) / 1000);
+      message.innerHTML = `🎉 Bravo ${pseudo} ! Trouvé en ${essais} essais et ${temps} secondes.`;
+
+      ajouterScore(pseudo, essais, temps);
+
+      setTimeout(() => {
+        document.getElementById("pseudoForm").style.display = "block";
+        document.getElementById("gameArea").style.display = "none";
+        document.getElementById("pseudo").value = "";
+        document.getElementById("inputNumber").value = "";
+        document.getElementById("message").textContent = "";
+        document.getElementById("timer").textContent = "0";
+      }, 4000);
+    }
+
+    input.focus();
+  }
+
+  document.addEventListener("keydown", function(event) {
+    if (event.key === "Enter" && document.getElementById("gameArea").style.display !== "none") {
+      deviner();
+    }
+  });
+</script>
+
+</body>
+</html>

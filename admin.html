@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Interface Admin</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #f6d365, #fda085);
+      color: white;
+      text-align: center;
+    }
+
+    .container {
+      padding: 20px;
+      max-width: 1000px;
+      margin: auto;
+    }
+
+    h1 {
+      color: #fda085;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px auto;
+      background: white;
+      color: black;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    th, td {
+      padding: 12px;
+      border: 1px solid #ccc;
+      text-align: center;
+    }
+
+    th {
+      background-color: #ff7e5f;
+      color: white;
+    }
+
+    input[type="password"], input[type="number"], input[type="text"] {
+      width: 100px;
+      padding: 5px;
+    }
+
+    button {
+      padding: 10px 20px;
+      background-color: red;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin: 10px;
+    }
+
+    #login {
+      margin-top: 100px;
+    }
+
+    #adminInterface {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="login">
+    <h1>🔐 Connexion Admin</h1>
+    <input type="password" id="password" placeholder="Mot de passe" />
+    <br><br>
+    <label><input type="checkbox" id="rememberMe"> Se souvenir de moi</label>
+    <br><br>
+    <button onclick="verifierMotDePasse()">Se connecter</button>
+    <p id="erreur" style="color: red;"></p>
+  </div>
+
+  <div id="adminInterface" class="container">
+    <h1>🎮 Interface Administrateur</h1>
+
+    <button onclick="window.location.href='accueil.html'">⬅️ Retour à la page d'acceuil</button>
+
+    <h2>🏆 Scores Jeu de Devinette</h2>
+    <table id="devinetteScores">
+      <thead>
+        <tr>
+          <th>Pseudo</th>
+          <th>Essais</th>
+          <th>Temps</th>
+          <th>Moyenne</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <h2>🦖 Scores Jeu Dino</h2>
+    <table id="dinoScores">
+      <thead>
+        <tr>
+          <th>Pseudo</th>
+          <th>Score</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <script>
+    const motDePasse = atob("MjUwMzIwMTIq"); // = 25032012*
+
+    // Connexion auto si le mot de passe est en mémoire
+    window.onload = function () {
+      if (localStorage.getItem("adminAuth") === "ok") {
+        document.getElementById("login").style.display = "none";
+        document.getElementById("adminInterface").style.display = "block";
+        chargerScores();
+      }
+    };
+
+    function verifierMotDePasse() {
+      const input = document.getElementById("password").value;
+      if (input === motDePasse) {
+        if (document.getElementById("rememberMe").checked) {
+          localStorage.setItem("adminAuth", "ok");
+        }
+        document.getElementById("login").style.display = "none";
+        document.getElementById("adminInterface").style.display = "block";
+        chargerScores();
+      } else {
+        document.getElementById("erreur").textContent = "❌ Mot de passe incorrect.";
+      }
+    }
+
+    let refreshTimeout;
+
+    function chargerScores() {
+      // Devinette
+      const devScores = JSON.parse(localStorage.getItem("scores")) || [];
+      const devBody = document.querySelector("#devinetteScores tbody");
+      devBody.innerHTML = "";
+
+      devScores.forEach((score, i) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td><input value="${score.pseudo}" onchange="updateDevinette(${i}, 'pseudo', this.value)" /></td>
+          <td><input type="number" value="${score.essais}" onchange="updateDevinette(${i}, 'essais', this.value)" /></td>
+          <td><input type="number" value="${score.temps}" onchange="updateDevinette(${i}, 'temps', this.value)" /></td>
+          <td>${score.moyenne?.toFixed(2) || "N/A"}</td>
+          <td><button onclick="supprimerDevinette(${i})">❌ Supprimer</button></td>
+        `;
+        devBody.appendChild(row);
+      });
+
+      // Dino
+      const dinoScores = JSON.parse(localStorage.getItem("dinoScores")) || [];
+      const dinoBody = document.querySelector("#dinoScores tbody");
+      dinoBody.innerHTML = "";
+
+      dinoScores.forEach((score, i) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td><input value="${score.pseudo}" onchange="updateDino(${i}, 'pseudo', this.value)" /></td>
+          <td><input type="number" value="${score.score}" onchange="updateDino(${i}, 'score', this.value)" /></td>
+          <td><button onclick="supprimerDino(${i})">❌ Supprimer</button></td>
+        `;
+        dinoBody.appendChild(row);
+      });
+
+      clearTimeout(refreshTimeout);
+      refreshTimeout = setTimeout(chargerScores, 5000); // boucle toutes les 5 secondes
+    }
+
+    function updateDevinette(index, champ, valeur) {
+      let scores = JSON.parse(localStorage.getItem("scores")) || [];
+      scores[index][champ] = champ === "essais" || champ === "temps" ? parseInt(valeur) : valeur;
+      scores[index].moyenne = ((scores[index].temps / 20) + (scores[index].essais / 10)) / 2;
+      localStorage.setItem("scores", JSON.stringify(scores));
+      chargerScores();
+    }
+
+    function supprimerDevinette(index) {
+      let scores = JSON.parse(localStorage.getItem("scores")) || [];
+      scores.splice(index, 1);
+      localStorage.setItem("scores", JSON.stringify(scores));
+      chargerScores();
+    }
+
+    function updateDino(index, champ, valeur) {
+      let scores = JSON.parse(localStorage.getItem("dinoScores")) || [];
+      scores[index][champ] = champ === "score" ? parseInt(valeur) : valeur;
+      localStorage.setItem("dinoScores", JSON.stringify(scores));
+      chargerScores();
+    }
+
+    function supprimerDino(index) {
+      let scores = JSON.parse(localStorage.getItem("dinoScores")) || [];
+      scores.splice(index, 1);
+      localStorage.setItem("dinoScores", JSON.stringify(scores));
+      chargerScores();
+    }
+  </script>
+</body>
+</html>
