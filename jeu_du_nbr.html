@@ -142,13 +142,14 @@
 
   window.onload = function () {
     const utilisateur = JSON.parse(localStorage.getItem("utilisateurConnecte"));
-    if (utilisateur) {
-      document.getElementById("connexionBtn").style.display = "none";
-    }
 
-    const savedPseudo = localStorage.getItem("pseudoConnecte");
-    if (savedPseudo) {
-      document.getElementById("pseudo").value = savedPseudo;
+    if (utilisateur) {
+      // Masque le champ pseudo si connecté
+      document.getElementById("pseudoForm").innerHTML = `
+        <p>Connecté en tant que <strong>${utilisateur.pseudo}</strong></p>
+        <button onclick="demarrerJeu()">Commencer</button>
+      `;
+      document.getElementById("connexionBtn").style.display = "none";
     }
 
     chargerScores();
@@ -181,12 +182,9 @@
   function ajouterScore(pseudo, essais, temps) {
     const moyenne = ((temps / 20) + (essais / 10)) / 2;
 
-    // Supprime l'ancien score de ce pseudo s'il existe
     scores = scores.filter(score => score.pseudo !== pseudo);
-
     scores.push({ pseudo, essais, temps, moyenne });
 
-    // Trie les scores par meilleure moyenne et garde top 5
     scores.sort((a, b) => a.moyenne - b.moyenne);
     scores = scores.slice(0, 5);
 
@@ -195,10 +193,16 @@
   }
 
   function demarrerJeu() {
-    pseudo = document.getElementById("pseudo").value.trim();
-    if (pseudo === "") {
-      alert("Merci d'entrer un pseudo !");
-      return;
+    const utilisateur = JSON.parse(localStorage.getItem("utilisateurConnecte"));
+
+    if (utilisateur) {
+      pseudo = utilisateur.pseudo;
+    } else {
+      pseudo = document.getElementById("pseudo").value.trim();
+      if (pseudo === "") {
+        alert("Merci d'entrer un pseudo !");
+        return;
+      }
     }
 
     document.getElementById("pseudoForm").style.display = "none";
@@ -247,7 +251,6 @@
       setTimeout(() => {
         document.getElementById("pseudoForm").style.display = "block";
         document.getElementById("gameArea").style.display = "none";
-        document.getElementById("pseudo").value = "";
         document.getElementById("inputNumber").value = "";
         document.getElementById("message").textContent = "";
         document.getElementById("timer").textContent = "0";
