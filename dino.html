@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>Jeu du Dino</title>
   <style>
-    body {
+     body {
       font-family: Arial, sans-serif;
       margin: 0;
       background: linear-gradient(to right, #f6d365, #fda085);
@@ -16,88 +16,104 @@
     }
 
     #container {
-      max-width: 800px;
-      margin: 40px auto;
-      background-color: #ff7e5f
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      background: white;
+      padding: 30px;
+      border-radius: 15px;
+      width: 850px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      text-align: center;
+      position: relative;
     }
 
-    h2 {
-      margin-bottom: 10px;
+    input, button {
+      padding: 10px;
+      font-size: 16px;
+      margin: 5px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      background-color: #ff7e5f;
+      color: white;
+      cursor: pointer;
+      border: none;
+    }
+
+    canvas {
+      display: block;
+      margin: 20px auto;
+      background-color: #fff;
+      border: 2px solid #000;
     }
 
     #score {
       font-size: 24px;
-      margin: 10px 0;
+      margin-top: 10px;
     }
 
-    canvas {
-      border: 2px solid #ccc;
-      background: #fff;
+    #connexionBtn {
+        position: absolute;
+        top: 10px;
+        left: 1283px;
+        font-size: 16px;
+        padding: 8px 12px;
+        background-color: #ff7e5f;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    #retour {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      font-size: 16px;
+      padding: 8px 12px;
+      background-color: #ff7e5f;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
     }
 
     #rejouerBtn {
       display: none;
       margin-top: 15px;
-      padding: 8px 16px;
-      font-size: 16px;
-      background-color: #28a745;
+    }
+
+    #resetBtn {
+      position: absolute;
+      top: 10px;
+      right: 10px; 
+      background-color: #d62828;
+      padding: 10px 15px;
       color: white;
       border: none;
       border-radius: 5px;
       cursor: pointer;
+      z-index: 10;
     }
 
     table {
-      width: 100%;
+      margin: 30px auto 0;
       border-collapse: collapse;
-      margin-top: 20px;
+      width: 90%;
     }
 
     th, td {
-      border: 1px solid #ddd;
-      padding: 8px;
+      border: 1px solid #ccc;
+      padding: 8px 12px;
     }
 
     th {
-      background-color: #f0f0f0;
-    }
-
-    #pseudoForm {
-      margin-bottom: 20px;
-    }
-
-    #pseudoForm input {
-      padding: 10px;
-      width: 200px;
-      font-size: 16px;
-    }
-
-    #pseudoForm button {
-      padding: 10px 15px;
-      font-size: 16px;
-    }
-
-    #retour, #connexionBtn {
-      position: absolute;
-      top: 10px;
-      padding: 10px 15px;
-      background-color: #007bff;
+      background-color: #f7a072;
       color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
     }
 
-    #retour {
-      left: 10px;
-      background-color: #ff7e5f;
-    }
-
-    #connexionBtn {
-      right: 10px;
+    tbody tr:nth-child(even) {
+      background-color: #ffe0c9;
     }
   </style>
 </head>
