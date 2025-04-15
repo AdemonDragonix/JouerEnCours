@@ -4,6 +4,34 @@
   <meta charset="UTF-8">
   <title>Page d'accueil</title>
   <style>
+
+
+#widgetConnexion {
+  position: fixed;
+  top: 15px;
+  left: 15px;
+  background-color: red;
+  color: white;
+  padding: 10px 15px;
+  border-radius: 20px;
+  font-weight: bold;
+  font-family: sans-serif;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  display: flex;
+  align-items: center;
+  z-index: 999;
+}
+
+.pointVert {
+  width: 12px;
+  height: 12px;
+  background-color: limegreen;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 8px;
+}
+
+    
     body {
       font-family: Arial, sans-serif;
       margin: 0;
@@ -49,11 +77,34 @@
   </style>
 </head>
 <body>
+<div id="widgetConnexion">
+  <span class="pointVert"></span>
+  <span id="nbConnectes">0</span> en ligne
+</div>
+
+  
   <div id="container">
     <h1>🎮 Bienvenue sur le portail des jeux</h1>
     <a class="btn" href="jeu_du_nbr.html">🧠 Jeu de devinette</a>
     <a class="btn" href="dino.html">🦖 Jeu du Dino</a>
     <a class="btn" href="admin.html">⚙️ Interface Admin</a>
   </div>
+  <script>
+  function rafraichirNbConnectes() {
+    fetch('get_online_count.php')
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById("nbConnectes").innerText = data.count || 0;
+      })
+      .catch(() => {
+        document.getElementById("nbConnectes").innerText = "–";
+      });
+  }
+
+  // Met à jour toutes les 10 secondes
+  setInterval(rafraichirNbConnectes, 10000);
+  rafraichirNbConnectes();
+</script>
+
 </body>
 </html>
